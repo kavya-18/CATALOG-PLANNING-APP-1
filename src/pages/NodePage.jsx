@@ -1,81 +1,188 @@
-import React from "react";
-import { useParams, useNavigate } from "react-router-dom";
+// src/pages/NodePage.jsx
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
 import CategoryCard from "../components/CategoryCard";
+import ModalForm from "../components/ModalForm";
 
-// MOCK DATA — replace later with Firebase
-const mockData = {
-  "1": [
-    { id: "pattu-sarees", name: "Pattu Sarees", image: "" },
-    { id: "soft-silk", name: "Soft Silk", image: "" },
-    { id: "organza", name: "Organza", image: "" },
-  ],
-  "2": [
-    { id: "necklaces", name: "Necklaces", image: "" },
-    { id: "earrings", name: "Earrings", image: "" },
-    { id: "bangles", name: "Bangles", image: "" },
-  ],
-  "3": [
-    { id: "stage-decor", name: "Stage Decoration", image: "" },
-    { id: "entrance", name: "Entrance Setup", image: "" },
-  ],
-  "4": [
-    { id: "haldi-bowl", name: "Haldi Bowl", image: "" },
-    { id: "turmeric-decor", name: "Turmeric Decorations", image: "" },
-  ],
-};
-
-export default function NodePage() {
-  const { nodeId } = useParams();
+export default function NodePage({ tree, saveTree }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const children = mockData[nodeId] || [];
+  // ------------------------------------------------------------
+  // Current path segments after "/node/"
+  // ex: /node/sarees/pattu → ["sarees","pattu"]
+  // ------------------------------------------------------------
+  const path = location.pathname.replace("/node/", "").split("/").filter(Boolean);
+
+  // ------------------------------------------------------------
+  // Find the node in the tree using path
+  // ------------------------------------------------------------
+  const findNode = (root, segments) => {
+    let node = root;
+    for (let id of segments) {
+      node = node.children.find((c) => c.id === id);
+      if (!node) return null;
+    }
+    return node;
+  };
+
+  const currentNode = findNode(tree, path);
+
+  // If node doesn't exist
+  if (!currentNode) {
+    return (
+      <div className="page-container">
+        <button className="btn-back" onClick={() => navigate(-1)}>← Back</button>
+        <h2>Category not found</h2>
+      </div>
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Modal States
+  // ------------------------------------------------------------
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
+
+  // ------------------------------------------------------------
+  // Add New Subcategory
+  // ------------------------------------------------------------
+  const handleAdd = (form) => {
+    const newId = form.name.toLowerCase().replace(/\s+/g, "-");
+
+    saveTree((prev) => {
+      const clone = structuredClone(prev);
+      const target = findNode(clone, path);
+
+      target.children.push({
+        id: newId,
+        name: form.name,
+        notes: form.notes,
+        link: form.link,
+        images: form.files?.map(f => URL.createObjectURL(f)) ?? [],
+        status: form.status,
+        children: [],
+      });
+
+      return clone;
+    });
+
+    setAddOpen(false);
+  };
+
+  // ------------------------------------------------------------
+  // Edit current node
+  // ------------------------------------------------------------
+  const handleEdit = (form) => {
+    saveTree((prev) => {
+      const clone = structuredClone(prev);
+      const target = findNode(clone, path);
+
+      target.name = form.name;
+      target.notes = form.notes;
+      target.link = form.link;
+      target.status = form.status;
+
+      // Images: existingImages + newly uploaded files
+      const newImages = [
+        ...(form.existingImages ?? []),
+        ...(form.files?.map(f => URL.createObjectURL(f)) ?? [])
+      ];
+
+      target.images = newImages;
+
+      return clone;
+    });
+
+    setEditOpen(false);
+  };
+
+  // ------------------------------------------------------------
+  // Delete child node
+  // ------------------------------------------------------------
+  const deleteChild = (childId) => {
+    saveTree((prev) => {
+      const clone = structuredClone(prev);
+      const target = findNode(clone, path);
+
+      target.children = target.children.filter((c) => c.id !== childId);
+
+      return clone;
+    });
+  };
+
+  // ------------------------------------------------------------
+  // Navigation to child
+  // ------------------------------------------------------------
+  const openChild = (childId) => {
+    navigate(`/node/${[...path, childId].join("/")}`);
+  };
 
   return (
     <div className="page-container">
 
       {/* Back Button */}
-      <button className="btn" onClick={() => navigate(-1)}>
-        ← Back
-      </button>
+      <button className="btn-back" onClick={() => navigate(-1)}>← Back</button>
 
-      <h1 className="page-title">Subcategories</h1>
+      {/* Page Title */}
+      <h1 className="page-title">{currentNode.name}</h1>
 
-      {/* Add Subcategory */}
-      <button
-        className="btn"
-        style={{ marginBottom: "20px" }}
-        onClick={() => navigate(`/add-subcategory/${nodeId}`)}
-      >
-        + Add Subcategory
-      </button>
-
-      {/* Subcategory Grid */}
-      <div className="grid-container">
-        {children.length === 0 ? (
-          <p>No subcategories yet.</p>
-        ) : (
-          children.map((item, index) => (
-            <CategoryCard
-              key={index}
-              name={item.name}
-              image={item.image}
-              onClick={() =>
-                navigate(`/item/${nodeId}/${index}/${item.id}`)
-              }
-            />
-          ))
-        )}
+      {/* Buttons Row */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+        <button className="btn" onClick={() => setAddOpen(true)}>
+          + Add Subcategory
+        </button>
+        <button
+          className="btn edit-page-btn"
+          onClick={() => {
+            setEditData(currentNode);
+            setEditOpen(true);
+          }}
+        >
+          ✏ Edit
+        </button>
       </div>
 
-      {/* Add Item Button */}
-      <button
-        className="btn"
-        style={{ marginTop: "30px" }}
-        onClick={() => navigate(`/item/${nodeId}/0/new/add`)}
-      >
-        + Add Item
-      </button>
+      {/* CHILDREN GRID */}
+      <div className="grid-container">
+        {currentNode.children.map((child) => (
+          <CategoryCard
+            key={child.id}
+            name={child.name}
+            image={child.images?.[0]}
+            link={child.link}
+            status={child.status}
+            onClick={() => openChild(child.id)}
+            onEdit={() => {
+              setEditData(child);
+              setEditOpen(true);
+            }}
+            onDelete={() => deleteChild(child.id)}
+          />
+        ))}
 
+        {/* ADD CARD */}
+        <CategoryCard isAddCard name="Add" onClick={() => setAddOpen(true)} />
+      </div>
+
+      {/* Add Modal */}
+      <ModalForm
+        open={addOpen}
+        title="Add Subcategory"
+        onSubmit={handleAdd}
+        onClose={() => setAddOpen(false)}
+      />
+
+      {/* Edit Modal */}
+      <ModalForm
+        open={editOpen}
+        title="Edit"
+        initialData={editData}
+        onSubmit={handleEdit}
+        onClose={() => setEditOpen(false)}
+      />
     </div>
   );
 }

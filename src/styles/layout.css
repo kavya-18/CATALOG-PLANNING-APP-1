@@ -1,83 +1,41 @@
-/* ================================
-   Pinterest Grid Layout
-   ================================ */
-
-/* Page container (centered) */
-.page-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+.back-button {
+  align-self: flex-start;
+  margin-bottom: 16px;
+  background: white;
+  border-radius: 999px;
+  padding: 6px 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
 }
 
-/* Beautiful responsive grid */
-.grid-container {
+.link-button {
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.image-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 24px;
-  margin-top: 20px;
-  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
 }
 
-/* Title area styling */
-.page-title {
-  font-size: 32px;
-  margin-bottom: 20px;
-  color: var(--text-dark);
-  text-align: center;
-}
-
-/* Spacing for action buttons (Add Category / Add Subcategory) */
-.action-bar {
-  margin-bottom: 18px;
-  display: flex;
-  justify-content: flex-start;
-}
-/* =============================
-   Form Section Styling
-   ============================= */
-
-.form-container {
-  width: 70%;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-label {
-  font-family: "Poppins", sans-serif;
-  font-size: 16px;
-  margin-top: 10px;
-  color: var(--text-dark);
-}
-
-.form-input {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  font-size: 16px;
-}
-
-.form-textarea {
+.gallery-image {
   width: 100%;
   height: 140px;
-  padding: 14px;
+  object-fit: cover;
   border-radius: 12px;
-  border: 1px solid #ddd;
-  resize: vertical;
-  font-size: 15px;
 }
 
-.btn {
-  background: white;
-  padding: 14px;
-  border-radius: 12px;
-  width: 100%;
-  margin-top: 16px;
-  border: none;
-  box-shadow: var(--shadow-card);
-  cursor: pointer;
-  font-family: "Poppins", sans-serif;
-  font-size: 16px;
+.node-actions-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.node-notes {
+  font-size: 14px;
+  color: #555;
+  max-width: 640px;
+  margin-bottom: 4px;
 }

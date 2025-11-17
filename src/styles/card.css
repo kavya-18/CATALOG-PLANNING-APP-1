@@ -1,25 +1,27 @@
-/* ================================
-   Category Card UI
-   ================================ */
-
-.category-card {
-  cursor: pointer;
-  padding: 0;
-  overflow: hidden;
-  border-radius: 16px;
+/* ==============================
+   Base Card Layout
+============================== */
+.card {
   background: white;
+  border-radius: 16px;
   box-shadow: var(--shadow-card);
+  overflow: hidden;
+  position: relative;
+  transition: 0.25s ease;
+  cursor: pointer;
 }
 
-.category-card:hover {
+.card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
 }
 
-/* Image styling */
+/* ==============================
+   Image Section
+============================== */
 .card-image-wrapper {
   width: 100%;
-  height: 160px;
+  height: 170px;
   overflow: hidden;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
@@ -31,18 +33,126 @@
   object-fit: cover;
 }
 
-/* Title styling */
+/* ==============================
+   Title
+============================== */
 .card-title {
+  font-size: 18px;
   font-family: "Playfair Display", serif;
-  font-size: 20px;
-  font-weight: 600;
-  padding: 12px;
+  font-weight: bold;
   text-align: center;
-  color: var(--text-dark);
+  padding: 12px;
+  color: #333;
 }
-.uploaded-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 16px;
+
+/* ==============================
+   STATUS BADGE
+============================== */
+.status-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+  color: white;
+  z-index: 10;
+}
+
+.status-idea {
+  background: #6c5ce7;
+}
+
+.status-pending {
+  background: #e17055;
+}
+
+.status-review {
+  background: #fdcb6e;
+  color: black;
+}
+
+.status-completed {
+  background: #00b894;
+}
+
+/* ==============================
+   Edit & Delete Icons (top-right)
+============================== */
+.card-actions {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+  z-index: 12;
+}
+
+.edit-icon,
+.delete-icon {
+  background: white;
+  padding: 6px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+  cursor: pointer;
+}
+
+.edit-icon:hover {
+  background: #ece6ff;
+}
+
+.delete-icon:hover {
+  background: #ffe6e6;
+}
+
+/* ==============================
+   Link Button
+============================== */
+.card-link-button {
+  display: block;
+  background: #6c5ce7;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-weight: 600;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  text-decoration: none;
+}
+
+.card-link-button:hover {
+  background: #5a4cd7;
+}
+
+/* ==============================
+   ADD CARD (Plus Button Style)
+============================== */
+.add-card {
+  border: 2px dashed #bbb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 260px;
+  background: #fafafa;
+}
+
+.add-card:hover {
+  background: #f2f2f2;
+}
+
+.add-card-plus {
+  font-size: 48px;
+  color: #6c5ce7;
+  font-weight: 600;
+}
+
+.add-card-text {
+  margin-top: 8px;
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
 }
