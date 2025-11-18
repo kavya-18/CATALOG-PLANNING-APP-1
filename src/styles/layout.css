@@ -1,83 +1,53 @@
-/* ================================
-   Pinterest Grid Layout
-   ================================ */
-
-/* Page container (centered) */
 .page-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  padding: 32px;
+  min-height: 100vh;
+    /* ❌ REMOVE THIS (it overwrites theme background)
+  background: linear-gradient(to bottom, #fff7fb, #ffeef5);
+  */
+
+  /* ✔ allow global wedding background to show */
+  background: transparent !important;
+
 }
 
-/* Beautiful responsive grid */
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 24px;
-  margin-top: 20px;
-  align-items: start;
-}
-
-/* Title area styling */
 .page-title {
-  font-size: 32px;
-  margin-bottom: 20px;
-  color: var(--text-dark);
   text-align: center;
+  font-family: "Playfair Display", serif;
+  font-size: 32px;
+  margin-bottom: 24px;
+  color: #5b2c41;
 }
 
-/* Spacing for action buttons (Add Category / Add Subcategory) */
-.action-bar {
-  margin-bottom: 18px;
+.grid-container {
   display: flex;
-  justify-content: flex-start;
-}
-/* =============================
-   Form Section Styling
-   ============================= */
-
-.form-container {
-  width: 70%;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-label {
-  font-family: "Poppins", sans-serif;
-  font-size: 16px;
-  margin-top: 10px;
-  color: var(--text-dark);
-}
-
-.form-input {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  font-size: 16px;
-}
-
-.form-textarea {
-  width: 100%;
-  height: 140px;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  resize: vertical;
-  font-size: 15px;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
 }
 
 .btn {
-  background: white;
-  padding: 14px;
-  border-radius: 12px;
-  width: 100%;
-  margin-top: 16px;
   border: none;
-  box-shadow: var(--shadow-card);
+  outline: none;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #6c5ce7;
+  color: white;
   cursor: pointer;
-  font-family: "Poppins", sans-serif;
-  font-size: 16px;
+  font-size: 14px;
+}
+
+.btn.secondary {
+  background: #f3f3ff;
+  color: #6c5ce7;
+}
+
+.btn.back-btn {
+  margin-bottom: 16px;
+}
+
+.toolbar-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 20px;
 }

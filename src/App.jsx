@@ -1,35 +1,74 @@
+// src/App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import HomePage from "./pages/HomePage";
 import NodePage from "./pages/NodePage";
 import AddCategoryPage from "./pages/AddCategoryPage";
-import AddSubcategoryPage from "./pages/AddSubcategoryPage";
-import AddItem from "./pages/AddItem";
-import ItemPage from "./pages/ItemPage";
+import { initialTree } from "./data/initialTree";
+
+import { db } from "./firebase/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function App() {
+  const [tree, setTree] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load tree from Firestore once
+  useEffect(() => {
+    async function loadTree() {
+      try {
+        const ref = doc(db, "tree", "root");
+        const snap = await getDoc(ref);
+
+        if (!snap.exists()) {
+          await setDoc(ref, initialTree);
+          setTree(initialTree);
+        } else {
+          setTree(snap.data());
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error("🔥 Firestore error:", err);
+        setLoading(false);
+      }
+    }
+
+    loadTree();
+  }, []);
+
+  // Save helper – used by HomePage & NodePage
+  const saveTree = async (nextTree) => {
+    setTree(nextTree);
+    try {
+      const ref = doc(db, "tree", "root");
+      await setDoc(ref, nextTree);
+    } catch (err) {
+      console.error("Firestore save error:", err);
+      alert("Could not save changes. Check console for details.");
+    }
+  };
+
+  if (loading || !tree) {
+    return <div className="page-container">Loading data...</div>;
+  }
+
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* Home Page */}
-        <Route path="/" element={<HomePage />} />
-
-        {/* Category/Subcategory Explorer */}
-        <Route path="/node/:nodeId" element={<NodePage />} />
-
-        {/* Add new root-level category */}
-        <Route path="/add-category" element={<AddCategoryPage />} />
-
-        {/* Add subcategory under a main category */}
-        <Route path="/add-subcategory/:nodeId" element={<AddSubcategoryPage />} />
-
-        {/* Add item inside a subcategory */}
-        <Route path="/item/:nodeId/:subId/:itemId/add" element={<AddItem />} />
-
-        {/* Full item detail page (notes, files, status, etc.) */}
-        <Route path="/item/:nodeId/:subId/:itemId" element={<ItemPage />} />
-
+        <Route
+          path="/"
+          element={<HomePage tree={tree} saveTree={saveTree} />}
+        />
+        <Route
+          path="/add-category"
+          element={<AddCategoryPage tree={tree} saveTree={saveTree} />}
+        />
+        <Route
+          path="/node/*"
+          element={<NodePage tree={tree} saveTree={saveTree} />}
+        />
       </Routes>
     </BrowserRouter>
   );
