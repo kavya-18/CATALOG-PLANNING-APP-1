@@ -1,125 +1,69 @@
+/* =========================================
+   GLOBAL WEDDING THEME – Royal Soft Pattern
+   ========================================= */
+
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Poppins:wght@300;400;500&display=swap');
 
-/* ================================
-   Global Pastel Floral Theme
-   ================================ */
-
-/* 🎀 Color Palette (Pastel Wedding) */
-:root {
-  --pink: #F7DDE2;
-  --lavender: #E6D6F5;
-  --peach: #FDD8CC;
-  --mint: #D6F5E6;
-  --blue: #D7E7F7;
-  --rose: #C7859A;
-
-  --text-dark: #5A4A4A;
-  --bg-soft: #FAF9F8;
-
-  --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-card: 0 6px 18px rgba(0, 0, 0, 0.10);
-}
-
-/* 🎨 Import Fonts */
-
-/* 🌸 Global Layout Reset */
-* {
+/* Applies to entire app */
+html, body {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  font-family: "Poppins", sans-serif;
+
+  /* Royal pastel gradient */
+  background: linear-gradient(
+    to bottom,
+    #ffeff7 0%,
+    #f8d9e6 40%,
+    #f2c8dc 100%
+  ) !important;
+
+  /* Subtle decorative pattern */
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255, 215, 180, 0.35) 1px, transparent 0),
+    radial-gradient(circle at 3px 3px, rgba(255, 240, 220, 0.25) 1px, transparent 0);
+
+  background-size: 40px 40px, 70px 70px;
+  background-attachment: fixed !important;
 }
 
-body {
-  background: linear-gradient(180deg, #FAF9F8, #FFF5F8, #FDEEF2);
-  font-family: 'Poppins', sans-serif;
-  color: var(--text-dark);
-  min-height: 100vh;
-  padding-bottom: 40px;
+/* Page container formatting */
+.page-container {
+  padding: 40px 20px;
+  max-width: 1300px;
+  margin: 0 auto;
 }
 
-/* 🌸 Headers Use Playfair */
-h1, h2, h3, .title {
-  font-family: 'Playfair Display', serif;
+/* All titles use royal font */
+h1, h2, h3 {
+  font-family: "Playfair Display", serif;
+  color: #6A3D52;
 }
 
-/* 🌸 Smooth Animations */
-button, .card, .chip {
-  transition: all 0.2s ease;
-}
-
-/* 🌸 General Button Style */
-.btn {
-  padding: 10px 18px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  font-family: 'Poppins', sans-serif;
-  font-size: 15px;
-  box-shadow: var(--shadow-light);
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-}
-
-/* 🌸 Card Base Style */
-.card {
-  background: white;
-  border-radius: 18px;
-  box-shadow: var(--shadow-card);
-  padding: 12px;
-}
-
-/* 🌸 Status Chips */
-.chip {
-  padding: 4px 10px;
-  border-radius: 10px;
-  font-size: 13px;
-  display: inline-block;
-}
-
-.chip.idea { background: var(--pink); }
-.chip.selected { background: var(--mint); }
-.chip.review { background: var(--lavender); }
-.chip.done { background: var(--blue); }
-
-/* 🌸 Add Floating Look */
-.card:hover {
-  transform: translateY(-4px);
-}
-/* ---------------------------------
-   BEAUTIFUL BACK BUTTON
----------------------------------- */
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  background: linear-gradient(135deg, #fce4ec, #f8bbd0);
-  padding: 10px 18px;
-  border-radius: 25px;
-  border: none;
-
-  font-size: 16px;
-  font-weight: 600;
-  color: #5a3e36;
-  cursor: pointer;
-
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+/* Smoother animation */
+button, .card {
   transition: all 0.25s ease;
 }
 
-.back-btn:hover {
+/* Buttons in soft wedding theme */
+.btn {
+  font-family: "Poppins", sans-serif;
+  background: #f7ddef;
+  color: #5a3a47;
+  border-radius: 12px;
+  padding: 10px 16px;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.20);
 }
 
-.back-btn:active {
-  transform: scale(0.97);
-}
-
-/* Back icon */
-.back-icon {
-  font-size: 18px;
-  font-weight: bold;
+/* Fix body reset that may override patterns */
+body {
+  display: block !important;
+  place-items: unset !important;
+  min-height: 100vh;
 }

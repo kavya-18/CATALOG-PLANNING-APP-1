@@ -1,7 +1,7 @@
 // src/components/ModalForm.jsx
-
 import React, { useEffect, useState } from "react";
 import "../styles/modal.css";
+import { startSpeechRecognition } from "../utils/speechToText";
 
 export default function ModalForm({
   open,
@@ -15,8 +15,11 @@ export default function ModalForm({
   const [link, setLink] = useState("");
   const [status, setStatus] = useState("Idea");
 
-  const [existingImages, setExistingImages] = useState([]);
   const [files, setFiles] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+
+  // Which field is currently being voice-recorded
+  const [listeningField, setListeningField] = useState(null);
 
   useEffect(() => {
     if (initialData) {
@@ -38,9 +41,18 @@ export default function ModalForm({
 
   if (!open) return null;
 
-  const handleFileChange = (e) => {
-    const selected = Array.from(e.target.files);
-    setFiles(selected);
+  // 🎤 Universal mic handler
+  const handleMic = (field) => {
+    setListeningField(field);
+
+    startSpeechRecognition({
+      onStart: () => setListeningField(field),
+      onResult: (text) => {
+        if (field === "name") setName(text);
+        if (field === "notes") setNotes(text);
+      },
+      onEnd: () => setListeningField(null),
+    });
   };
 
   const handleSave = () => {
@@ -54,8 +66,8 @@ export default function ModalForm({
       notes,
       link,
       status,
+      files,
       existingImages,
-      files, // NEW uploaded files
     });
   };
 
@@ -63,34 +75,58 @@ export default function ModalForm({
     <div className="modal-overlay">
       <div className="modal-card">
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="modal-header">
           <h2 className="modal-title">{title}</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
-        {/* Body */}
         <div className="modal-body">
 
-          {/* NAME */}
+          {/* NAME + MIC */}
           <label className="form-label">Name</label>
-          <input
-            className="form-input"
-            type="text"
-            value={name}
-            placeholder="Enter name"
-            onChange={(e) => setName(e.target.value)}
-          />
+          <div className="input-with-mic">
+            <input
+              className="form-input"
+              type="text"
+              value={name}
+              placeholder="Say the name…"
+              onChange={(e) => setName(e.target.value)}
+            />
 
-          {/* NOTES */}
+            <button
+              className={`mic-btn ${listeningField === "name" ? "listening" : ""}`}
+              onClick={() => handleMic("name")}
+            >
+              🎤
+            </button>
+          </div>
+
+          {listeningField === "name" && (
+            <div className="listening-text">Listening…</div>
+          )}
+
+          {/* NOTES + MIC */}
           <label className="form-label">Notes</label>
-          <textarea
-            className="form-textarea"
-            rows={3}
-            value={notes}
-            placeholder="Write your notes..."
-            onChange={(e) => setNotes(e.target.value)}
-          />
+          <div className="input-with-mic">
+            <textarea
+              className="form-textarea"
+              rows={3}
+              value={notes}
+              placeholder="Speak notes…"
+              onChange={(e) => setNotes(e.target.value)}
+            />
+            <button
+              className={`mic-btn ${listeningField === "notes" ? "listening" : ""}`}
+              onClick={() => handleMic("notes")}
+            >
+              🎤
+            </button>
+          </div>
+
+          {listeningField === "notes" && (
+            <div className="listening-text">Listening…</div>
+          )}
 
           {/* LINK */}
           <label className="form-label">Reference Link</label>
@@ -120,26 +156,25 @@ export default function ModalForm({
             <>
               <label className="form-label">Existing Images</label>
               <div className="image-preview-row">
-                {existingImages.map((img, i) => (
-                  <img key={i} src={img} className="uploaded-image" alt="preview" />
+                {existingImages.map((url, idx) => (
+                  <img key={idx} src={url} className="uploaded-image" />
                 ))}
               </div>
             </>
           )}
 
-          {/* NEW IMAGE UPLOAD */}
-          <label className="form-label">Add New Images</label>
+          {/* NEW UPLOAD */}
+          <label className="form-label">Upload New Images</label>
           <input
             type="file"
             accept="image/*"
             multiple
-            capture="environment"
-            onChange={handleFileChange}
+            onChange={(e) => setFiles(Array.from(e.target.files))}
           />
 
         </div>
 
-        {/* Footer */}
+        {/* FOOTER */}
         <div className="modal-footer">
           <button className="btn secondary" onClick={onClose}>Cancel</button>
           <button className="btn" onClick={handleSave}>Save</button>
