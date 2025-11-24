@@ -1,7 +1,8 @@
-// src/components/ModalForm.jsx
 import React, { useEffect, useState } from "react";
 import "../styles/modal.css";
 import { startSpeechRecognition } from "../utils/speechToText";
+
+const STATUS_OPTIONS = ["Idea", "Pending", "Started", "Completed"];
 
 export default function ModalForm({
   open,
@@ -18,7 +19,6 @@ export default function ModalForm({
   const [files, setFiles] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
 
-  // Which field is currently being voice-recorded
   const [listeningField, setListeningField] = useState(null);
 
   useEffect(() => {
@@ -41,10 +41,8 @@ export default function ModalForm({
 
   if (!open) return null;
 
-  // 🎤 Universal mic handler
   const handleMic = (field) => {
     setListeningField(field);
-
     startSpeechRecognition({
       onStart: () => setListeningField(field),
       onResult: (text) => {
@@ -55,6 +53,10 @@ export default function ModalForm({
     });
   };
 
+  const handleDeleteExistingImage = (index) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSave = () => {
     if (!name.trim()) {
       alert("Please enter a name.");
@@ -62,9 +64,9 @@ export default function ModalForm({
     }
 
     onSubmit({
-      name,
-      notes,
-      link,
+      name: name.trim(),
+      notes: notes.trim(),
+      link: link.trim(),
       status,
       files,
       existingImages,
@@ -74,28 +76,29 @@ export default function ModalForm({
   return (
     <div className="modal-overlay">
       <div className="modal-card">
-
-        {/* HEADER */}
         <div className="modal-header">
           <h2 className="modal-title">{title}</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>
+            ✕
+          </button>
         </div>
 
         <div className="modal-body">
-
-          {/* NAME + MIC */}
+          {/* NAME */}
           <label className="form-label">Name</label>
           <div className="input-with-mic">
             <input
               className="form-input"
               type="text"
               value={name}
-              placeholder="Say the name…"
+              placeholder="Say or type the name…"
               onChange={(e) => setName(e.target.value)}
             />
-
             <button
-              className={`mic-btn ${listeningField === "name" ? "listening" : ""}`}
+              className={`mic-btn ${
+                listeningField === "name" ? "listening" : ""
+              }`}
+              type="button"
               onClick={() => handleMic("name")}
             >
               🎤
@@ -103,21 +106,24 @@ export default function ModalForm({
           </div>
 
           {listeningField === "name" && (
-            <div className="listening-text">Listening…</div>
+            <div className="listening-text">Listening for name…</div>
           )}
 
-          {/* NOTES + MIC */}
+          {/* NOTES */}
           <label className="form-label">Notes</label>
           <div className="input-with-mic">
             <textarea
               className="form-textarea"
               rows={3}
               value={notes}
-              placeholder="Speak notes…"
+              placeholder="Notes about this category/item…"
               onChange={(e) => setNotes(e.target.value)}
             />
             <button
-              className={`mic-btn ${listeningField === "notes" ? "listening" : ""}`}
+              className={`mic-btn ${
+                listeningField === "notes" ? "listening" : ""
+              }`}
+              type="button"
               onClick={() => handleMic("notes")}
             >
               🎤
@@ -125,7 +131,7 @@ export default function ModalForm({
           </div>
 
           {listeningField === "notes" && (
-            <div className="listening-text">Listening…</div>
+            <div className="listening-text">Listening for notes…</div>
           )}
 
           {/* LINK */}
@@ -145,10 +151,11 @@ export default function ModalForm({
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
-            <option value="Idea">Idea</option>
-            <option value="Pending">Pending</option>
-            <option value="Review">Review</option>
-            <option value="Completed">Completed</option>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
 
           {/* EXISTING IMAGES */}
@@ -157,13 +164,22 @@ export default function ModalForm({
               <label className="form-label">Existing Images</label>
               <div className="image-preview-row">
                 {existingImages.map((url, idx) => (
-                  <img key={idx} src={url} className="uploaded-image" />
+                  <div key={idx} className="image-thumb-wrapper">
+                    <img src={url} className="uploaded-image" alt="" />
+                    <button
+                      type="button"
+                      className="delete-image-btn"
+                      onClick={() => handleDeleteExistingImage(idx)}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ))}
               </div>
             </>
           )}
 
-          {/* NEW UPLOAD */}
+          {/* NEW IMAGES */}
           <label className="form-label">Upload New Images</label>
           <input
             type="file"
@@ -171,15 +187,16 @@ export default function ModalForm({
             multiple
             onChange={(e) => setFiles(Array.from(e.target.files))}
           />
-
         </div>
 
-        {/* FOOTER */}
         <div className="modal-footer">
-          <button className="btn secondary" onClick={onClose}>Cancel</button>
-          <button className="btn" onClick={handleSave}>Save</button>
+          <button className="btn secondary" type="button" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="btn" type="button" onClick={handleSave}>
+            Save
+          </button>
         </div>
-
       </div>
     </div>
   );

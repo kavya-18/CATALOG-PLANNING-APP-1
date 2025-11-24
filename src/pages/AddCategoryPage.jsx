@@ -1,30 +1,36 @@
 // src/pages/AddCategoryPage.jsx
-import ModalForm from "../components/ModalForm";
 import { useNavigate } from "react-router-dom";
+import ModalForm from "../components/ModalForm";
+import { createNode } from "../services/firestoreService";
+import { uploadImages } from "../services/storageService";
 
-export default function AddCategoryPage({ tree, saveTree }) {
+export default function AddCategoryPage({ rootId }) {
   const navigate = useNavigate();
 
-  const handleSubmit = async (data) => {
-    const { name, notes, link, status } = data;
+  const handleSubmit = async ({ name, link, files, existingImages }) => {
+    try {
+      // 1) upload any new files to a folder for root’s children
+      const uploadedUrls =
+        files && files.length
+          ? await uploadImages(files, `nodes/${rootId}`)
+          : [];
 
-    const newCat = {
-      id: name.toLowerCase().replace(/\s+/g, "-"),
-      name,
-      notes,
-      link,
-      status,
-      images: [],      // image URLs later when we wire Storage
-      children: [],
-    };
+      // 2) combine existing + newly uploaded
+      const images = [...(existingImages || []), ...uploadedUrls];
 
-    const updated = {
-      ...tree,
-      children: [...(tree.children || []), newCat],
-    };
+      // 3) create a child node of root
+      await createNode({
+        parentId: rootId,
+        name,
+        link: link || "",
+        images,
+      });
 
-    await saveTree(updated);
-    navigate("/");
+      navigate("/");
+    } catch (err) {
+      console.error("AddCategoryPage handleSubmit error:", err);
+      alert("Something went wrong while saving. Please try again.");
+    }
   };
 
   return (

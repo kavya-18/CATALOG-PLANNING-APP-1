@@ -1,7 +1,18 @@
 // src/pages/HomePage.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CategoryCard from "../components/CategoryCard";
+import NotesModal from "../components/NotesModal";
+import StatusModal from "../components/StatusModal";
+import ModalForm from "../components/ModalForm";
+
+import {
+  getChildren,
+  updateNode,
+  deleteNodeAndDescendants,
+  reorderChildren,
+} from "../services/firestoreService";
+import { uploadImages } from "../services/storageService";
 
 // dnd-kit imports
 import {
@@ -19,17 +30,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-/* -----------------------------
-   Small wrapper for sortable card
-------------------------------*/
 function SortableCategoryWrapper({ item, children }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: item.id });
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: item.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -43,66 +46,118 @@ function SortableCategoryWrapper({ item, children }) {
   );
 }
 
-/* -----------------------------
-   HomePage Component
-------------------------------*/
-export default function HomePage({ tree, saveTree }) {
+export default function HomePage({ rootId }) {
   const navigate = useNavigate();
 
-  if (!tree) {
-    return <div className="page-container">Loading…</div>;
-  }
+  const [loading, setLoading] = useState(true);
+  const [cats, setCats] = useState([]);
 
-  const children = Array.isArray(tree.children) ? tree.children : [];
+  const [notesNode, setNotesNode] = useState(null);
+  const [statusNode, setStatusNode] = useState(null);
 
-  // Sensors: how drag starts
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingNode, setEditingNode] = useState(null);
+
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5, // small move before drag
-      },
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  // DELETE a root category
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        const children = await getChildren(rootId);
+        setCats(children);
+      } catch (err) {
+        console.error("loadCategories error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [rootId]);
+
+  const refreshChildren = async () => {
+    const children = await getChildren(rootId);
+    setCats(children);
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this category and everything inside it?")) {
       return;
     }
-
-    const updated = {
-      ...tree,
-      children: children.filter((c) => c.id !== id),
-    };
-
-    await saveTree(updated);
+    await deleteNodeAndDescendants(id);
+    await refreshChildren();
   };
 
-  // EDIT a root category
-  const handleEdit = (node) => {
-    navigate(`/node/${node.id}?edit=1`);
-  };
-
-  const goToAdd = () => navigate("/add-category");
-
-  // Handle drag end for root categories
   const handleDragEnd = async (event) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = children.findIndex((c) => c.id === active.id);
-    const newIndex = children.findIndex((c) => c.id === over.id);
+    const oldIndex = cats.findIndex((c) => c.id === active.id);
+    const newIndex = cats.findIndex((c) => c.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const reordered = arrayMove(children, oldIndex, newIndex);
+    const reordered = arrayMove(cats, oldIndex, newIndex);
+    setCats(reordered);
 
-    const updated = {
-      ...tree,
-      children: reordered,
-    };
-
-    await saveTree(updated);
+    const newChildIds = reordered.map((c) => c.id);
+    await reorderChildren(rootId, newChildIds);
   };
+
+  const goToAdd = () => navigate("/add-category");
+
+  // ---- Notes & Status ----
+  const saveNotes = async (newNotes) => {
+    if (!notesNode) return;
+    await updateNode(notesNode.id, { notes: newNotes || "" });
+    setNotesNode(null);
+    await refreshChildren();
+  };
+
+  const saveStatus = async (newStatus) => {
+    if (!statusNode) return;
+    await updateNode(statusNode.id, { status: newStatus || "Idea" });
+    setStatusNode(null);
+    await refreshChildren();
+  };
+
+  // ---- EDIT from home page ----
+  const handleEditSubmit = async ({ name, link, files, existingImages }) => {
+    if (!editingNode) return;
+
+    try {
+      const uploaded =
+        files && files.length
+          ? await uploadImages(files, `nodes/${editingNode.id}`)
+          : [];
+
+      const baseImages = existingImages ?? editingNode.images ?? [];
+      const images = [...baseImages, ...uploaded];
+
+      await updateNode(editingNode.id, {
+        name,
+        link: link || "",
+        images,
+      });
+
+      setEditOpen(false);
+      setEditingNode(null);
+      await refreshChildren();
+    } catch (err) {
+      console.error("HomePage handleEditSubmit error:", err);
+      alert("Could not update. Please try again.");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <h1 className="page-title">Wedding Categories</h1>
+        <p>Loading…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -114,12 +169,11 @@ export default function HomePage({ tree, saveTree }) {
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={children.map((c) => c.id)}
+          items={cats.map((c) => c.id)}
           strategy={rectSortingStrategy}
         >
           <div className="grid-container">
-            {/* Sortable root categories */}
-            {children.map((cat) => (
+            {cats.map((cat) => (
               <SortableCategoryWrapper key={cat.id} item={cat}>
                 <CategoryCard
                   name={cat.name}
@@ -127,17 +181,50 @@ export default function HomePage({ tree, saveTree }) {
                   status={cat.status}
                   link={cat.link}
                   onClick={() => navigate(`/node/${cat.id}`)}
-                  onEdit={() => handleEdit(cat)}
+                  onEdit={() => {
+                    setEditingNode(cat);
+                    setEditOpen(true);
+                  }}
                   onDelete={() => handleDelete(cat.id)}
+                  onNotes={() => setNotesNode(cat)}
+                  onStatusClick={() => setStatusNode(cat)}
                 />
               </SortableCategoryWrapper>
             ))}
 
-            {/* Non-sortable +Add card always at end */}
+            {/* + Add card */}
             <CategoryCard isAddCard name="Add New" onClick={goToAdd} />
           </div>
         </SortableContext>
       </DndContext>
+
+      {/* NOTES modal */}
+      <NotesModal
+        open={!!notesNode}
+        initialNotes={notesNode?.notes || ""}
+        onSave={saveNotes}
+        onClose={() => setNotesNode(null)}
+      />
+
+      {/* STATUS modal */}
+      <StatusModal
+        open={!!statusNode}
+        initialStatus={statusNode?.status || "Idea"}
+        onSave={saveStatus}
+        onClose={() => setStatusNode(null)}
+      />
+
+      {/* EDIT modal */}
+      <ModalForm
+        open={editOpen}
+        initialData={editingNode}
+        title="Edit Category"
+        onSubmit={handleEditSubmit}
+        onClose={() => {
+          setEditOpen(false);
+          setEditingNode(null);
+        }}
+      />
     </div>
   );
 }

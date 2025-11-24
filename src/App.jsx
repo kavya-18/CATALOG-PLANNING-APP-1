@@ -5,70 +5,41 @@ import { useEffect, useState } from "react";
 import HomePage from "./pages/HomePage";
 import NodePage from "./pages/NodePage";
 import AddCategoryPage from "./pages/AddCategoryPage";
-import { initialTree } from "./data/initialTree";
 
-import { db } from "./firebase/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { createRootIfMissing } from "./services/firestoreService";
 
 export default function App() {
-  const [tree, setTree] = useState(null);
+  const [root, setRoot] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load tree from Firestore once
   useEffect(() => {
-    async function loadTree() {
+    async function init() {
       try {
-        const ref = doc(db, "tree", "root");
-        const snap = await getDoc(ref);
-
-        if (!snap.exists()) {
-          await setDoc(ref, initialTree);
-          setTree(initialTree);
-        } else {
-          setTree(snap.data());
-        }
-
-        setLoading(false);
+        const r = await createRootIfMissing();
+        setRoot(r);
       } catch (err) {
-        console.error("🔥 Firestore error:", err);
+        console.error("Firestore init error:", err);
+      } finally {
         setLoading(false);
       }
     }
-
-    loadTree();
+    init();
   }, []);
 
-  // Save helper – used by HomePage & NodePage
-  const saveTree = async (nextTree) => {
-    setTree(nextTree);
-    try {
-      const ref = doc(db, "tree", "root");
-      await setDoc(ref, nextTree);
-    } catch (err) {
-      console.error("Firestore save error:", err);
-      alert("Could not save changes. Check console for details.");
-    }
-  };
-
-  if (loading || !tree) {
+  if (loading || !root) {
     return <div className="page-container">Loading data...</div>;
   }
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={<HomePage tree={tree} saveTree={saveTree} />}
-        />
+        <Route path="/" element={<HomePage rootId={root.id} />} />
         <Route
           path="/add-category"
-          element={<AddCategoryPage tree={tree} saveTree={saveTree} />}
+          element={<AddCategoryPage rootId={root.id} />}
         />
-        <Route
-          path="/node/*"
-          element={<NodePage tree={tree} saveTree={saveTree} />}
-        />
+        {/* node + any nested part (/*) */}
+        <Route path="/node/:nodeId/*" element={<NodePage />} />
       </Routes>
     </BrowserRouter>
   );

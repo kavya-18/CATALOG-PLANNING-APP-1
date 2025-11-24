@@ -1,6 +1,4 @@
-/* =========================================
-   GLOBAL WEDDING THEME – Royal Soft Pattern
-   ========================================= */
+/* GLOBAL WEDDING THEME */
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Poppins:wght@300;400;500&display=swap');
 
@@ -20,34 +18,26 @@ html, body {
     #f2c8dc 100%
   ) !important;
 
-  /* Subtle decorative pattern */
+  /* Subtle pattern only — NO IMAGE */
   background-image:
     radial-gradient(circle at 1px 1px, rgba(255, 215, 180, 0.35) 1px, transparent 0),
     radial-gradient(circle at 3px 3px, rgba(255, 240, 220, 0.25) 1px, transparent 0);
 
   background-size: 40px 40px, 70px 70px;
-  background-attachment: fixed !important;
+  background-attachment: fixed;
 }
 
-/* Page container formatting */
 .page-container {
   padding: 40px 20px;
   max-width: 1300px;
   margin: 0 auto;
 }
 
-/* All titles use royal font */
 h1, h2, h3 {
   font-family: "Playfair Display", serif;
   color: #6A3D52;
 }
 
-/* Smoother animation */
-button, .card {
-  transition: all 0.25s ease;
-}
-
-/* Buttons in soft wedding theme */
 .btn {
   font-family: "Poppins", sans-serif;
   background: #f7ddef;
@@ -56,14 +46,9 @@ button, .card {
   padding: 10px 16px;
   border: none;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-.btn:hover {
-  transform: translateY(-3px);
+  transition: 0.25s ease;
 }
 
-/* Fix body reset that may override patterns */
-body {
-  display: block !important;
-  place-items: unset !important;
-  min-height: 100vh;
+.btn:hover {
+  transform: translateY(-3px);
 }

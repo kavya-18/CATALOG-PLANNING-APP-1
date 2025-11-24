@@ -1,13 +1,7 @@
 .page-container {
   padding: 32px;
   min-height: 100vh;
-    /* ❌ REMOVE THIS (it overwrites theme background)
-  background: linear-gradient(to bottom, #fff7fb, #ffeef5);
-  */
-
-  /* ✔ allow global wedding background to show */
-  background: transparent !important;
-
+  background: transparent;
 }
 
 .page-title {
