@@ -1,81 +1,78 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { doc, getDoc, collection, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 import CategoryCard from "../components/CategoryCard";
+import AddEditItemModal from "../components/AddEditItemModal";
+import "../styles/layout.css";
 
-// MOCK DATA — replace later with Firebase
-const mockData = {
-  "1": [
-    { id: "pattu-sarees", name: "Pattu Sarees", image: "" },
-    { id: "soft-silk", name: "Soft Silk", image: "" },
-    { id: "organza", name: "Organza", image: "" },
-  ],
-  "2": [
-    { id: "necklaces", name: "Necklaces", image: "" },
-    { id: "earrings", name: "Earrings", image: "" },
-    { id: "bangles", name: "Bangles", image: "" },
-  ],
-  "3": [
-    { id: "stage-decor", name: "Stage Decoration", image: "" },
-    { id: "entrance", name: "Entrance Setup", image: "" },
-  ],
-  "4": [
-    { id: "haldi-bowl", name: "Haldi Bowl", image: "" },
-    { id: "turmeric-decor", name: "Turmeric Decorations", image: "" },
-  ],
-};
-
-export default function NodePage() {
+const NodePage = () => {
   const { nodeId } = useParams();
   const navigate = useNavigate();
+  const [nodeData, setNodeData] = useState(null);
+  const [children, setChildren] = useState([]);
+  const [addOpen, setAddOpen] = useState(false);
 
-  const children = mockData[nodeId] || [];
+  useEffect(() => {
+    const unsub1 = onSnapshot(doc(db, "nodes", nodeId), (snapshot) => {
+      setNodeData(snapshot.data());
+    });
+
+    const unsub2 = onSnapshot(
+      collection(db, "nodes", nodeId, "children"),
+      (snapshot) => {
+        const arr = [];
+        snapshot.forEach((doc) => arr.push({ id: doc.id, ...doc.data() }));
+        setChildren(arr);
+      }
+    );
+
+    return () => {
+      unsub1();
+      unsub2();
+    };
+  }, [nodeId]);
 
   return (
     <div className="page-container">
+      <button className="btn back-btn" onClick={() => navigate(-1)}>← Back</button>
 
-      {/* Back Button */}
-      <button className="btn" onClick={() => navigate(-1)}>
-        ← Back
-      </button>
+      <h1 className="page-title">{nodeData?.title}</h1>
 
-      <h1 className="page-title">Subcategories</h1>
-
-      {/* Add Subcategory */}
-      <button
-        className="btn"
-        style={{ marginBottom: "20px" }}
-        onClick={() => navigate(`/add-subcategory/${nodeId}`)}
-      >
-        + Add Subcategory
-      </button>
-
-      {/* Subcategory Grid */}
-      <div className="grid-container">
-        {children.length === 0 ? (
-          <p>No subcategories yet.</p>
-        ) : (
-          children.map((item, index) => (
-            <CategoryCard
-              key={index}
-              name={item.name}
-              image={item.image}
-              onClick={() =>
-                navigate(`/item/${nodeId}/${index}/${item.id}`)
-              }
-            />
-          ))
-        )}
+      <div className="toolbar-row">
+        <button className="btn" onClick={() => setAddOpen(true)}>
+          + Add Subcategory / Item
+        </button>
       </div>
 
-      {/* Add Item Button */}
-      <button
-        className="btn"
-        style={{ marginTop: "30px" }}
-        onClick={() => navigate(`/item/${nodeId}/0/new/add`)}
-      >
-        + Add Item
-      </button>
+      <div className="grid-container">
+        {children.map((child) => (
+          <CategoryCard
+            key={child.id}
+            title={child.title}
+            images={child.images}
+            notes={child.notes}
+            status={child.status}
+            onClick={() => navigate(`/node/${child.id}`)}
+            onEdit={() =>
+              navigate(`/edit/${nodeId}/${child.id}`, { state: child })
+            }
+            onDelete={() => console.log("Delete clicked")}
+          />
+        ))}
 
+        {/* ADD NEW CARD → WORKING NOW */}
+        <CategoryCard isAddCard onAdd={() => setAddOpen(true)} />
+      </div>
+
+      {addOpen && (
+        <AddEditItemModal
+          parentId={nodeId}
+          closeModal={() => setAddOpen(false)}
+        />
+      )}
     </div>
   );
-}
+};
+
+export default NodePage;

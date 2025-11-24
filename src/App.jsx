@@ -1,35 +1,45 @@
+// src/App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import HomePage from "./pages/HomePage";
 import NodePage from "./pages/NodePage";
 import AddCategoryPage from "./pages/AddCategoryPage";
-import AddSubcategoryPage from "./pages/AddSubcategoryPage";
-import AddItem from "./pages/AddItem";
-import ItemPage from "./pages/ItemPage";
+
+import { createRootIfMissing } from "./services/firestoreService";
 
 export default function App() {
+  const [root, setRoot] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const r = await createRootIfMissing();
+        setRoot(r);
+      } catch (err) {
+        console.error("Firestore init error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    init();
+  }, []);
+
+  if (loading || !root) {
+    return <div className="page-container">Loading data...</div>;
+  }
+
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* Home Page */}
-        <Route path="/" element={<HomePage />} />
-
-        {/* Category/Subcategory Explorer */}
-        <Route path="/node/:nodeId" element={<NodePage />} />
-
-        {/* Add new root-level category */}
-        <Route path="/add-category" element={<AddCategoryPage />} />
-
-        {/* Add subcategory under a main category */}
-        <Route path="/add-subcategory/:nodeId" element={<AddSubcategoryPage />} />
-
-        {/* Add item inside a subcategory */}
-        <Route path="/item/:nodeId/:subId/:itemId/add" element={<AddItem />} />
-
-        {/* Full item detail page (notes, files, status, etc.) */}
-        <Route path="/item/:nodeId/:subId/:itemId" element={<ItemPage />} />
-
+        <Route path="/" element={<HomePage rootId={root.id} />} />
+        <Route
+          path="/add-category"
+          element={<AddCategoryPage rootId={root.id} />}
+        />
+        {/* node + any nested part (/*) */}
+        <Route path="/node/:nodeId/*" element={<NodePage />} />
       </Routes>
     </BrowserRouter>
   );
